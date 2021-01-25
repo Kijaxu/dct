@@ -4,7 +4,7 @@
 -- Weapons impact tracking system
 --]]
 
-local class    = require("libs.class")
+local class    = require("libs.namedclass")
 local vector   = require("dct.libs.vector")
 local Command  = require("dct.Command")
 local Logger   = dct.Logger.getByName("WpnTracker")
@@ -54,16 +54,14 @@ local function calcRadiusFromMass(mass)
 	return math.ceil(11.338 * math.pow(mass, .281))
 end
 
-local DCTWeapon = class()
+local DCTWeapon = class("DCTWeapon")
 function DCTWeapon:__init(wpn, initiator)
 	self.weapon      = wpn
 	self.type        = wpn:getTypeName()
 	self.shootername = initiator:getName()
 	self.desc        = wpn:getDesc()
-
-	-- TODO: need to calculate the max distance for both lethal effects
-	-- as well as suppression effects, so really need two distances
-	self.maxdist     = calcRadiusFromMass(self.desc.warhead.explosiveMass)
+	self.lethaldist  = calcRadiusFromMass(self.desc.warhead.explosiveMass)
+	self.maxdist     = 1.3 * self.lethaldist
 	self:update()
 end
 
@@ -137,7 +135,12 @@ end
 
 
 local tracked = {}
-local TrackWeaponsCmd = class(Command)
+local TrackWeaponsCmd = class("TrackWeaponsCmd", Command)
+function TrackWeaponsCmd:__init()
+	self.name = "TrackWeaponsCmd"
+	self.prio = Command.PRIORITY.WEAPON
+end
+
 function TrackWeaponsCmd:execute(time)
 	for id, wpn in pairs(tracked) do
 		if wpn:isExist() then
@@ -158,7 +161,7 @@ function TrackWeaponsCmd:execute(time)
 					Object.Category.STATIC,
 				},
 				vol, handleobject, wpn)
-			vol.params.radius = 4000 -- 4km
+			vol.params.radius = 5000 -- allows for almost a 15000ft runway
 			world.searchObjects(Object.Category.BASE, vol, handlebases, wpn)
 		end
 	end

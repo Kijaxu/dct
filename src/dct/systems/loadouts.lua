@@ -5,7 +5,6 @@
 -- Assumes a single player slot per group and it is the first slot.
 --]]
 
-require("lfs")
 local enum     = require("dct.enum")
 local settings = _G.dct.settings
 
@@ -59,16 +58,6 @@ local loadout = {}
 function loadout.check(player)
 	return validatePayload(Group.getByName(player.name),
 		player.payloadlimits)
-end
-
-function loadout.addmenu(asset, menu, handler, context)
-	local gid  = asset.groupId
-	local name = asset.name
-	missionCommands.addCommandForGroup(gid,
-		"Check Payload", menu, handler, context, {
-			["name"]   = name,
-			["type"]   = enum.uiRequestType.CHECKPAYLOAD,
-		})
 end
 
 return loadout
